@@ -1272,4 +1272,17 @@ if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
 endif
 endmenu
 
+menu "Additional tools(Lichee)"
+source "package/kernel-header/Config.in"
+source "package/sw-tools/Config.in"
+source "package/ext4-utils/Config.in"
+source "package/tiobench/Config.in"
+source "package/fsck_msdos/Config.in"
+source "package/mali-3d/Config.in"
+source "package/mali-3d-r2p3/Config.in"
+source "package/cedar/Config.in"
+source "package/szrz/Config.in"
+
+endmenu
+
 endmenu
