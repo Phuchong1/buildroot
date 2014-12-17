@@ -48,24 +48,7 @@ EOF
 
 chmod +x output/target/etc/init.d/auto_config_network
 
-# mac addr referring process
-TGT_DIR=output/target
-TGT_FILE=$TGT_DIR/etc/init.d/S30platform
 
-echo "###################################################################"
 
-MAC_ADDR="3a:9d:33:28:d2:22"
-CLIENT_IP_ADDR="192.168.3.122"
-echo $MAC_ADDR
-echo $CLIENT_IP_ADDR
-
-touch $TGT_FILE
-chmod +x $TGT_FILE
-echo "#!/bin/sh" > $TGT_FILE
-echo "ifconfig eth0 hw ether ${MAC_ADDR}" >> $TGT_FILE
-echo "ifconfig eth0 $CLIENT_IP_ADDR" >> $TGT_FILE
-echo "ifconfig lo 127.0.0.1" >> $TGT_FILE
-
-echo "###################################################################"
 
 
