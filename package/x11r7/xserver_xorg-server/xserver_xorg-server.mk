@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-XSERVER_XORG_SERVER_VERSION = 1.16.2
+XSERVER_XORG_SERVER_VERSION = 1.17.1
 XSERVER_XORG_SERVER_SOURCE = xorg-server-$(XSERVER_XORG_SERVER_VERSION).tar.bz2
 XSERVER_XORG_SERVER_SITE = http://xorg.freedesktop.org/releases/individual/xserver
 XSERVER_XORG_SERVER_LICENSE = MIT
@@ -54,23 +54,41 @@ XSERVER_XORG_SERVER_DEPENDENCIES = 	\
 	mcookie 			\
 	host-pkgconf
 
-XSERVER_XORG_SERVER_CONF_OPTS = --disable-config-hal \
-		--disable-xnest --disable-xephyr --disable-dmx \
-		--with-builder-addr=buildroot@buildroot.org \
-		CFLAGS="$(TARGET_CFLAGS) -I$(STAGING_DIR)/usr/include/pixman-1" \
-		--with-fontrootdir=/usr/share/fonts/X11/ \
-		--$(if $(BR2_PACKAGE_XSERVER_XORG_SERVER_XVFB),en,dis)able-xvfb
+XSERVER_XORG_SERVER_CONF_OPTS = \
+	--disable-config-hal \
+	--disable-xnest \
+	--disable-xephyr \
+	--disable-dmx \
+	--with-builder-addr=buildroot@buildroot.org \
+	CFLAGS="$(TARGET_CFLAGS) -I$(STAGING_DIR)/usr/include/pixman-1" \
+	--with-fontrootdir=/usr/share/fonts/X11/ \
+	--$(if $(BR2_PACKAGE_XSERVER_XORG_SERVER_XVFB),en,dis)able-xvfb
+
+ifeq ($(BR2_PACKAGE_SYSTEMD),y)
+XSERVER_XORG_SERVER_CONF_OPTS += \
+	--with-systemd-daemon \
+	--enable-systemd-logind
+XSERVER_XORG_SERVER_DEPENDENCIES += systemd
+else
+XSERVER_XORG_SERVER_CONF_OPTS += \
+	--without-systemd-daemon \
+	--disable-systemd-logind
+endif
 
 ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER_MODULAR),y)
 XSERVER_XORG_SERVER_CONF_OPTS += --enable-xorg
-XSERVER_XORG_SERVER_DEPENDENCIES += libpciaccess libdrm
+XSERVER_XORG_SERVER_DEPENDENCIES += libpciaccess
 else
 XSERVER_XORG_SERVER_CONF_OPTS += --disable-xorg
 endif
 
 ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER_KDRIVE),y)
-XSERVER_XORG_SERVER_CONF_OPTS += --enable-kdrive --enable-xfbdev \
-		--disable-glx --disable-dri --disable-xsdl
+XSERVER_XORG_SERVER_CONF_OPTS += \
+	--enable-kdrive \
+	--enable-xfbdev \
+	--disable-glx \
+	--disable-dri \
+	--disable-xsdl
 define XSERVER_CREATE_X_SYMLINK
 	ln -f -s Xfbdev $(TARGET_DIR)/usr/bin/X
 endef
@@ -99,16 +117,10 @@ XSERVER_XORG_SERVER_CONF_OPTS += --disable-kdrive --disable-xfbdev
 endif
 
 ifeq ($(BR2_PACKAGE_MESA3D_DRI_DRIVER),y)
-XSERVER_XORG_SERVER_CONF_OPTS += --enable-dri --enable-glx
-XSERVER_XORG_SERVER_DEPENDENCIES += mesa3d xproto_xf86driproto
+XSERVER_XORG_SERVER_CONF_OPTS += --enable-dri --enable-libdrm --enable-glx
+XSERVER_XORG_SERVER_DEPENDENCIES += libdrm mesa3d xproto_xf86driproto
 else
-XSERVER_XORG_SERVER_CONF_OPTS += --disable-dri --disable-glx
-endif
-
-ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER_NULL_CURSOR),y)
-XSERVER_XORG_SERVER_CONF_OPTS += --enable-null-root-cursor
-else
-XSERVER_XORG_SERVER_CONF_OPTS += --disable-null-root-cursor
+XSERVER_XORG_SERVER_CONF_OPTS += --disable-dri --disable-libdrm --disable-glx
 endif
 
 ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER_AIGLX),y)
@@ -129,7 +141,7 @@ XSERVER_XORG_SERVER_CONF_OPTS += --enable-config-udev
 # udev kms support depends on libdrm
 ifeq ($(BR2_PACKAGE_LIBDRM),y)
 XSERVER_XORG_SERVER_DEPENDENCIES += libdrm
-XSERVER_XORG_SERVER_CONF_OPTS += --enable-config-udev-kms
+XSERVER_XORG_SERVER_CONF_OPTS += --enable-config-udev-kms --enable-libdrm
 else
 XSERVER_XORG_SERVER_CONF_OPTS += --disable-config-udev-kms
 endif
@@ -144,9 +156,7 @@ ifeq ($(BR2_PACKAGE_FREETYPE),y)
 XSERVER_XORG_SERVER_DEPENDENCIES += freetype
 endif
 
-# libunwind support is broken on all MIPS variants with 32-bit pointers
-# https://bugs.freedesktop.org/show_bug.cgi?id=79939
-ifeq ($(BR2_PACKAGE_LIBUNWIND)-$(BR2_MIPS_OABI32)-$(BR2_MIPS_NABI32),y--)
+ifeq ($(BR2_PACKAGE_LIBUNWIND),y)
 XSERVER_XORG_SERVER_DEPENDENCIES += libunwind
 XSERVER_XORG_SERVER_CONF_OPTS += --enable-libunwind
 else
@@ -174,13 +184,21 @@ ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER_MODULAR),y)
 ifeq ($(BR2_PACKAGE_XPROTO_DRI2PROTO),y)
 XSERVER_XORG_SERVER_DEPENDENCIES += xproto_dri2proto
 XSERVER_XORG_SERVER_CONF_OPTS += --enable-dri2
+else
+XSERVER_XORG_SERVER_CONF_OPTS += --disable-dri2
 endif
 ifeq ($(BR2_PACKAGE_XPROTO_DRI3PROTO),y)
 XSERVER_XORG_SERVER_DEPENDENCIES += xlib_libxshmfence xproto_dri3proto
 XSERVER_XORG_SERVER_CONF_OPTS += --enable-dri3
+ifeq ($(BR2_PACKAGE_MESA3D_OPENGL_EGL),y)
+XSERVER_XORG_SERVER_DEPENDENCIES += libepoxy
+XSERVER_XORG_SERVER_CONF_OPTS += --enable-glamor
 endif
 else
-XSERVER_XORG_SERVER_CONF_OPTS += --disable-dri2 --disable-dri3
+XSERVER_XORG_SERVER_CONF_OPTS += --disable-dri3 --disable-glamor
+endif
+else
+XSERVER_XORG_SERVER_CONF_OPTS += --disable-dri2 --disable-dri3 --disable-glamor
 endif
 
 ifeq ($(BR2_PACKAGE_XLIB_LIBXSCRNSAVER),y)

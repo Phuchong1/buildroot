@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-FFMPEG_VERSION = 2.5
+FFMPEG_VERSION = 2.6.2
 FFMPEG_SOURCE = ffmpeg-$(FFMPEG_VERSION).tar.bz2
 FFMPEG_SITE = http://ffmpeg.org/releases
 FFMPEG_INSTALL_STAGING = YES
@@ -49,7 +49,6 @@ FFMPEG_CONF_OPTS = \
 	--disable-libopencv \
 	--disable-libdc1394 \
 	--disable-libfaac \
-	--disable-libfreetype \
 	--disable-libgsm \
 	--disable-libmp3lame \
 	--disable-libnut \
@@ -234,6 +233,23 @@ else
 FFMPEG_CONF_OPTS += --disable-libvpx
 endif
 
+# ffmpeg freetype support require fenv.h which is only
+# available/working on glibc.
+# The microblaze variant doesn't provide the needed exceptions
+ifeq ($(BR2_PACKAGE_FREETYPE)$(BR2_TOOLCHAIN_USES_GLIBC)x$(BR2_microblaze),yyx)
+FFMPEG_CONF_OPTS += --enable-libfreetype
+FFMPEG_DEPENDENCIES += freetype
+else
+FFMPEG_CONF_OPTS += --disable-libfreetype
+endif
+
+ifeq ($(BR2_PACKAGE_FONTCONFIG),y)
+FFMPEG_CONF_OPTS += --enable-fontconfig
+FFMPEG_DEPENDENCIES += fontconfig
+else
+FFMPEG_CONF_OPTS += --disable-fontconfig
+endif
+
 ifeq ($(BR2_PACKAGE_X264)$(BR2_PACKAGE_FFMPEG_GPL),yy)
 FFMPEG_CONF_OPTS += --enable-libx264
 FFMPEG_DEPENDENCIES += x264
@@ -283,6 +299,18 @@ ifeq ($(BR2_X86_CPU_HAS_SSE42),y)
 FFMPEG_CONF_OPTS += --enable-sse42
 else
 FFMPEG_CONF_OPTS += --disable-sse42
+endif
+
+ifeq ($(BR2_X86_CPU_HAS_AVX),y)
+FFMPEG_CONF_OPTS += --enable-avx
+else
+FFMPEG_CONF_OPTS += --disable-avx
+endif
+
+ifeq ($(BR2_X86_CPU_HAS_AVX2),y)
+FFMPEG_CONF_OPTS += --enable-avx2
+else
+FFMPEG_CONF_OPTS += --disable-avx2
 endif
 
 # Explicitly disable everything that doesn't match for ARM

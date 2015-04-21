@@ -14,6 +14,11 @@ LINUX_FIRMWARE_FILES += intel/fw_sst_0f28.bin-48kHz_i2s_master
 LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.fw_sst_0f28
 endif
 
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_RADEON),y)
+LINUX_FIRMWARE_DIRS += radeon
+LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENSE.radeon
+endif
+
 # rt2501/rt61
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_RALINK_RT61),y)
 LINUX_FIRMWARE_FILES += rt2561.bin rt2561s.bin rt2661.bin
@@ -47,15 +52,17 @@ endif
 
 # rtl87xx
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_RTL_87XX),y)
-LINUX_FIRMWARE_FILES += rtlwifi/rtl8712u.bin rtlwifi/rtl8723fw.bin	\
+LINUX_FIRMWARE_FILES += \
+	rtlwifi/rtl8712u.bin rtlwifi/rtl8723fw.bin \
 	rtlwifi/rtl8723fw_B.bin rtlwifi/rtl8723befw.bin
 LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.rtlwifi_firmware.txt
 endif
 
 # rtl88xx
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_RTL_88XX),y)
-LINUX_FIRMWARE_FILES += rtlwifi/rtl8821aefw.bin \
-			rtlwifi/rtl8821aefw_wowlan.bin
+LINUX_FIRMWARE_FILES += \
+	rtlwifi/rtl8821aefw.bin \
+	rtlwifi/rtl8821aefw_wowlan.bin
 LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.rtlwifi_firmware.txt
 endif
 
@@ -241,12 +248,14 @@ LINUX_FIRMWARE_FILES += \
 endif
 
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_XCx000),y)
-LINUX_FIRMWARE_FILES += dvb-fe-xc4000-1.4.1.fw \
-			dvb-fe-xc5000-1.6.114.fw \
-			dvb-fe-xc5000c-4.1.30.7.fw
-LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.xc4000 \
-				    LICENCE.xc5000 \
-				    LICENCE.xc5000c
+LINUX_FIRMWARE_FILES += \
+	dvb-fe-xc4000-1.4.1.fw \
+	dvb-fe-xc5000-1.6.114.fw \
+	dvb-fe-xc5000c-4.1.30.7.fw
+LINUX_FIRMWARE_ALL_LICENSE_FILES += \
+	LICENCE.xc4000 \
+	LICENCE.xc5000 \
+	LICENCE.xc5000c
 endif
 
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_AS102),y)
@@ -272,21 +281,40 @@ endif
 
 # brcm43xx
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_BRCM_BCM43XX),y)
-LINUX_FIRMWARE_FILES += brcm/bcm43xx-0.fw brcm/bcm43xx_hdr-0.fw \
-			brcm/bcm4329-fullmac-4.bin brcm/brcmfmac4329-sdio.bin \
-			brcm/brcmfmac4330-sdio.bin brcm/brcmfmac4334-sdio.bin \
-			brcm/brcmfmac4335-sdio.bin
+LINUX_FIRMWARE_FILES += \
+	brcm/bcm43xx-0.fw brcm/bcm43xx_hdr-0.fw \
+	brcm/bcm4329-fullmac-4.bin brcm/brcmfmac4329-sdio.bin \
+	brcm/brcmfmac4330-sdio.bin brcm/brcmfmac4334-sdio.bin \
+	brcm/brcmfmac4335-sdio.bin
 LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.broadcom_bcm43xx
 endif
 
 # brcm43xxx
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_BRCM_BCM43XXX),y)
-LINUX_FIRMWARE_FILES += brcm/brcmfmac43236b.bin brcm/brcmfmac43241b0-sdio.bin \
-			brcm/brcmfmac43241b4-sdio.bin brcm/brcmfmac43362-sdio.bin
+LINUX_FIRMWARE_FILES += \
+	brcm/brcmfmac43236b.bin brcm/brcmfmac43241b0-sdio.bin \
+	brcm/brcmfmac43241b4-sdio.bin brcm/brcmfmac43362-sdio.bin
 LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.broadcom_bcm43xx
 endif
 
 ifneq ($(LINUX_FIRMWARE_FILES),)
+define LINUX_FIRMWARE_INSTALL_FILES
+	$(TAR) c -C $(@D) $(sort $(LINUX_FIRMWARE_FILES)) | \
+		$(TAR) x -C $(TARGET_DIR)/lib/firmware
+endef
+endif
+
+ifneq ($(LINUX_FIRMWARE_DIRS),)
+# We need to rm-rf the destination directory to avoid copying
+# into it in itself, should we re-install the package.
+define LINUX_FIRMWARE_INSTALL_DIRS
+	$(foreach d,$(LINUX_FIRMWARE_DIRS), \
+		rm -rf $(TARGET_DIR)/lib/firmware/$(d); \
+		cp -a $(@D)/$(d) $(TARGET_DIR)/lib/firmware/$(d)$(sep))
+endef
+endif
+
+ifneq ($(LINUX_FIRMWARE_FILES)$(LINUX_FIRMWARE_DIRS),)
 
 # Most firmware files are under a proprietary license, so no need to
 # repeat it for every selections above. Those firmwares that have more
@@ -302,12 +330,12 @@ LINUX_FIRMWARE_ALL_LICENSE_FILES += WHENCE
 # duplicates
 LINUX_FIRMWARE_LICENSE_FILES = $(sort $(LINUX_FIRMWARE_ALL_LICENSE_FILES))
 
+endif
+
 define LINUX_FIRMWARE_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/lib/firmware
-	$(TAR) c -C $(@D) $(sort $(LINUX_FIRMWARE_FILES)) | \
-		$(TAR) x -C $(TARGET_DIR)/lib/firmware
+	$(LINUX_FIRMWARE_INSTALL_FILES)
+	$(LINUX_FIRMWARE_INSTALL_DIRS)
 endef
-
-endif
 
 $(eval $(generic-package))

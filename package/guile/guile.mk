@@ -8,6 +8,8 @@ GUILE_VERSION = 2.0.11
 GUILE_SOURCE = guile-$(GUILE_VERSION).tar.xz
 GUILE_SITE = $(BR2_GNU_MIRROR)/guile
 GUILE_INSTALL_STAGING = YES
+# For 0002-calculate-csqrt_manually.patch
+GUILE_AUTORECONF = YES
 GUILE_LICENSE = LGPLv3+
 GUILE_LICENSE_FILES = LICENSE COPYING COPYING.LESSER
 
@@ -28,6 +30,11 @@ GUILE_CFLAGS = \
 
 GUILE_CONF_ENV += GUILE_FOR_BUILD=$(HOST_DIR)/usr/bin/guile \
 	CFLAGS="$(TARGET_CFLAGS) $(GUILE_CFLAGS)"
+
+GUILE_CONF_OPTS += \
+	--with-libltdl-prefix=$(STAGING_DIR)/usr/lib \
+	--with-libgmp-prefix=$(STAGING_DIR)/usr/lib \
+	--with-libunistring-prefix=$(STAGING_DIR)/usr/lib
 
 $(eval $(autotools-package))
 $(eval $(host-autotools-package))

@@ -15,35 +15,35 @@ DNSMASQ_LICENSE = Dual GPLv2/GPLv3
 DNSMASQ_LICENSE_FILES = COPYING COPYING-v3
 
 ifneq ($(BR2_INET_IPV6),y)
-	DNSMASQ_COPTS += -DNO_IPV6
+DNSMASQ_COPTS += -DNO_IPV6
 endif
 
 ifneq ($(BR2_PACKAGE_DNSMASQ_DHCP),y)
-	DNSMASQ_COPTS += -DNO_DHCP
+DNSMASQ_COPTS += -DNO_DHCP
 endif
 
 ifeq ($(BR2_PACKAGE_DNSMASQ_DNSSEC),y)
-	DNSMASQ_DEPENDENCIES += gmp nettle
-	DNSMASQ_COPTS += -DHAVE_DNSSEC
+DNSMASQ_DEPENDENCIES += gmp nettle
+DNSMASQ_COPTS += -DHAVE_DNSSEC
 ifeq ($(BR2_STATIC_LIBS),y)
-	DNSMASQ_COPTS += -DHAVE_DNSSEC_STATIC
+DNSMASQ_COPTS += -DHAVE_DNSSEC_STATIC
 endif
 endif
 
 ifneq ($(BR2_PACKAGE_DNSMASQ_TFTP),y)
-	DNSMASQ_COPTS += -DNO_TFTP
+DNSMASQ_COPTS += -DNO_TFTP
 endif
 
 # NLS requires IDN so only enable it (i18n) when IDN is true
 ifeq ($(BR2_PACKAGE_DNSMASQ_IDN),y)
-	DNSMASQ_DEPENDENCIES += libidn $(if $(BR2_NEEDS_GETTEXT_IF_LOCALE),gettext) host-gettext
-	DNSMASQ_MAKE_OPTS += LIBS+="$(if $(BR2_NEEDS_GETTEXT_IF_LOCALE),-lintl)"
-	DNSMASQ_COPTS += -DHAVE_IDN
-	DNSMASQ_I18N = $(if $(BR2_ENABLE_LOCALE),-i18n)
+DNSMASQ_DEPENDENCIES += libidn $(if $(BR2_NEEDS_GETTEXT_IF_LOCALE),gettext) host-gettext
+DNSMASQ_MAKE_OPTS += LIBS+="$(if $(BR2_NEEDS_GETTEXT_IF_LOCALE),-lintl)"
+DNSMASQ_COPTS += -DHAVE_IDN
+DNSMASQ_I18N = $(if $(BR2_ENABLE_LOCALE),-i18n)
 endif
 
 ifeq ($(BR2_PACKAGE_DNSMASQ_CONNTRACK),y)
-	DNSMASQ_DEPENDENCIES += libnetfilter_conntrack
+DNSMASQ_DEPENDENCIES += libnetfilter_conntrack
 endif
 
 ifeq ($(BR2_PACKAGE_DNSMASQ_CONNTRACK),y)
@@ -54,11 +54,11 @@ endef
 endif
 
 ifeq ($(BR2_PACKAGE_DNSMASQ_LUA),y)
-	DNSMASQ_DEPENDENCIES += lua
+DNSMASQ_DEPENDENCIES += lua
 
 # liblua uses dlopen when dynamically linked
 ifneq ($(BR2_STATIC_LIBS),y)
-	DNSMASQ_MAKE_OPTS += LIBS+="-ldl"
+DNSMASQ_MAKE_OPTS += LIBS+="-ldl"
 endif
 
 define DNSMASQ_ENABLE_LUA
@@ -68,12 +68,8 @@ define DNSMASQ_ENABLE_LUA
 endef
 endif
 
-ifneq ($(BR2_LARGEFILE),y)
-	DNSMASQ_COPTS += -DNO_LARGEFILE
-endif
-
 ifeq ($(BR2_PACKAGE_DBUS),y)
-	DNSMASQ_DEPENDENCIES += dbus
+DNSMASQ_DEPENDENCIES += dbus
 endif
 
 define DNSMASQ_FIX_PKGCONFIG
@@ -101,9 +97,17 @@ define DNSMASQ_BUILD_CMDS
 	$(DNSMASQ_MAKE_ENV) $(MAKE1) -C $(@D) $(DNSMASQ_MAKE_OPTS) all$(DNSMASQ_I18N)
 endef
 
+ifeq ($(BR2_PACKAGE_DBUS),y)
+define DNSMASQ_INSTALL_DBUS
+	$(INSTALL) -m 0644 -D $(@D)/dbus/dnsmasq.conf \
+		$(TARGET_DIR)/etc/dbus-1/system.d/dnsmasq.conf
+endef
+endif
+
 define DNSMASQ_INSTALL_TARGET_CMDS
 	$(DNSMASQ_MAKE_ENV) $(MAKE) -C $(@D) $(DNSMASQ_MAKE_OPTS) install$(DNSMASQ_I18N)
 	mkdir -p $(TARGET_DIR)/var/lib/misc/
+	$(DNSMASQ_INSTALL_DBUS)
 endef
 
 define DNSMASQ_INSTALL_INIT_SYSV

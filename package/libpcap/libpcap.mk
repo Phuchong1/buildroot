@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-LIBPCAP_VERSION = 1.6.2
+LIBPCAP_VERSION = 1.7.2
 LIBPCAP_SITE = http://www.tcpdump.org/release
 LIBPCAP_LICENSE = BSD-3c
 LIBPCAP_LICENSE_FILES = LICENSE
@@ -13,9 +13,10 @@ LIBPCAP_DEPENDENCIES = zlib host-flex host-bison
 
 # We're patching configure.in
 LIBPCAP_AUTORECONF = YES
-LIBPCAP_CONF_ENV = ac_cv_linux_vers=2 \
-		ac_cv_header_linux_wireless_h=yes \
-		CFLAGS="$(LIBPCAP_CFLAGS)"
+LIBPCAP_CONF_ENV = \
+	ac_cv_linux_vers=2 \
+	ac_cv_header_linux_wireless_h=yes \
+	CFLAGS="$(LIBPCAP_CFLAGS)"
 LIBPCAP_CFLAGS = $(TARGET_CFLAGS)
 LIBPCAP_CONF_OPTS = --disable-yydebug --with-pcap=linux
 LIBPCAP_CONFIG_SCRIPTS = pcap-config

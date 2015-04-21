@@ -73,19 +73,20 @@ $(BUILD_DIR)/%/.stamp_downloaded:
 	$(foreach hook,$($(PKG)_PRE_DOWNLOAD_HOOKS),$(call $(hook))$(sep))
 ifeq ($(DL_MODE),DOWNLOAD)
 # Only show the download message if it isn't already downloaded
-	$(Q)if test ! -e $(DL_DIR)/$($(PKG)_SOURCE); then \
-		$(call MESSAGE,"Downloading") ; \
-	else \
-		for p in $($(PKG)_PATCH) ; do \
-			if test ! -e $(DL_DIR)/$$p ; then \
-				$(call MESSAGE,"Downloading") ; \
-				break ; \
-			fi ; \
-		done ; \
-	fi
+	$(Q)for p in $($(PKG)_SOURCE) $($(PKG)_PATCH) $($(PKG)_EXTRA_DOWNLOADS) ; do \
+		if test ! -e $(DL_DIR)/`basename $$p` ; then \
+			$(call MESSAGE,"Downloading") ; \
+			break ; \
+		fi ; \
+	done
 endif
 	$(if $($(PKG)_SOURCE),$(call DOWNLOAD,$($(PKG)_SITE:/=)/$($(PKG)_SOURCE)))
-	$(foreach p,$($(PKG)_EXTRA_DOWNLOADS),$(call DOWNLOAD,$($(PKG)_SITE:/=)/$(p))$(sep))
+	$(foreach p,$($(PKG)_EXTRA_DOWNLOADS),\
+		$(if $(findstring ://,$(p)),\
+			$(call DOWNLOAD,$(p)),\
+			$(call DOWNLOAD,$($(PKG)_SITE:/=)/$(p))\
+		)\
+	$(sep))
 	$(foreach p,$($(PKG)_PATCH),\
 		$(if $(findstring ://,$(p)),\
 			$(call DOWNLOAD,$(p)),\
@@ -427,6 +428,7 @@ endif
 
 # Eliminate duplicates in dependencies
 $(2)_FINAL_DEPENDENCIES = $$(sort $$($(2)_DEPENDENCIES))
+$(2)_FINAL_PATCH_DEPENDENCIES = $$(sort $$($(2)_PATCH_DEPENDENCIES))
 
 $(2)_INSTALL_STAGING		?= NO
 $(2)_INSTALL_IMAGES		?= NO
@@ -538,6 +540,8 @@ $$($(2)_TARGET_CONFIGURE):	$$($(2)_TARGET_PATCH)
 
 $(1)-patch:		$$($(2)_TARGET_PATCH)
 $$($(2)_TARGET_PATCH):	$$($(2)_TARGET_EXTRACT)
+# Order-only dependency
+$$($(2)_TARGET_PATCH):  | $$(patsubst %,%-patch,$$($(2)_FINAL_PATCH_DEPENDENCIES))
 
 $(1)-extract:			$$($(2)_TARGET_EXTRACT)
 $$($(2)_TARGET_EXTRACT):	$$($(2)_TARGET_SOURCE)
@@ -545,6 +549,11 @@ $$($(2)_TARGET_EXTRACT):	$$($(2)_TARGET_SOURCE)
 $(1)-depends:		$$($(2)_FINAL_DEPENDENCIES)
 
 $(1)-source:		$$($(2)_TARGET_SOURCE)
+
+$(1)-external-deps:
+	@for p in $$($(2)_SOURCE) $$($(2)_PATCH) $$($(2)_EXTRA_DOWNLOADS) ; do \
+		echo `basename $$$$p` ; \
+	done
 else
 # In the package override case, the sequence of steps
 #  source, by rsyncing
@@ -563,29 +572,45 @@ $(1)-extract:		$(1)-rsync
 $(1)-rsync:		$$($(2)_TARGET_RSYNC)
 
 $(1)-source:		$$($(2)_TARGET_RSYNC_SOURCE)
+
+$(1)-external-deps:
+	@echo "file://$$($(2)_OVERRIDE_SRCDIR)"
 endif
 
+$(1)-show-version:
+			@echo $$($(2)_VERSION)
+
 $(1)-show-depends:
-			@echo $$($(2)_FINAL_DEPENDENCIES)
+			@echo $$(sort $$($(2)_FINAL_DEPENDENCIES) $$($(2)_FINAL_PATCH_DEPENDENCIES))
 
 $(1)-graph-depends: graph-depends-requirements
-			@$$(INSTALL) -d $$(O)/graphs
+			@$$(INSTALL) -d $$(GRAPHS_DIR)
 			@cd "$$(CONFIG_DIR)"; \
 			$$(TOPDIR)/support/scripts/graph-depends -p $(1) $$(BR2_GRAPH_DEPS_OPTS) \
-			|tee $$(O)/graphs/$$(@).dot \
-			|dot $$(BR2_GRAPH_DOT_OPTS) -T$$(BR_GRAPH_OUT) -o $$(O)/graphs/$$(@).$$(BR_GRAPH_OUT)
+			|tee $$(GRAPHS_DIR)/$$(@).dot \
+			|dot $$(BR2_GRAPH_DOT_OPTS) -T$$(BR_GRAPH_OUT) -o $$(GRAPHS_DIR)/$$(@).$$(BR_GRAPH_OUT)
+
+$(1)-all-source:       $$(foreach p,$$($(2)_FINAL_DEPENDENCIES),$$(p)-all-source) $(1)-source
+
+$(1)-all-external-deps:        $$(foreach p,$$($(2)_FINAL_DEPENDENCIES),$$(p)-all-external-deps) $(1)-external-deps
+
+$(1)-all-legal-info:   $$(foreach p,$$($(2)_FINAL_DEPENDENCIES),$$(p)-all-legal-info) $(1)-legal-info
 
 $(1)-dirclean:		$$($(2)_TARGET_DIRCLEAN)
 
-$(1)-clean-for-rebuild:
+$(1)-clean-for-reinstall:
 ifneq ($$($(2)_OVERRIDE_SRCDIR),)
 			rm -f $$($(2)_TARGET_RSYNC)
 endif
-			rm -f $$($(2)_TARGET_BUILD)
 			rm -f $$($(2)_TARGET_INSTALL_STAGING)
 			rm -f $$($(2)_TARGET_INSTALL_TARGET)
 			rm -f $$($(2)_TARGET_INSTALL_IMAGES)
 			rm -f $$($(2)_TARGET_INSTALL_HOST)
+
+$(1)-reinstall:		$(1)-clean-for-reinstall $(1)
+
+$(1)-clean-for-rebuild: $(1)-clean-for-reinstall
+			rm -f $$($(2)_TARGET_BUILD)
 
 $(1)-rebuild:		$(1)-clean-for-rebuild $(1)
 
@@ -653,8 +678,6 @@ $(2)_MANIFEST_SITE = $$(call qstrip,$$($(2)_SITE))
 endif
 endif
 endif
-$(2)_MANIFEST_TARBALL ?= not saved
-$(2)_MANIFEST_SITE ?= not saved
 
 # legal-info: produce legally relevant info.
 $(1)-legal-info:
@@ -723,7 +746,7 @@ $(eval $(call check-deprecated-variable,$(2)_BUILD_OPT,$(2)_BUILD_OPTS))
 $(eval $(call check-deprecated-variable,$(2)_GETTEXTIZE_OPT,$(2)_GETTEXTIZE_OPTS))
 $(eval $(call check-deprecated-variable,$(2)_KCONFIG_OPT,$(2)_KCONFIG_OPTS))
 
-TARGETS += $(1)
+PACKAGES += $(1)
 
 ifneq ($$($(2)_PERMISSIONS),)
 PACKAGES_PERMISSIONS_TABLE += $$($(2)_PERMISSIONS)$$(sep)
@@ -756,6 +779,36 @@ endif # SITE_METHOD
 ifneq ($$(call suitable-extractor,$$($(2)_SOURCE)),$$(XZCAT))
 DL_TOOLS_DEPENDENCIES += $$(firstword $$(call suitable-extractor,$$($(2)_SOURCE)))
 endif
+
+# Ensure all virtual targets are PHONY. Listed alphabetically.
+.PHONY:	$(1) \
+	$(1)-all-external-deps \
+	$(1)-all-legal-info \
+	$(1)-all-source \
+	$(1)-build \
+	$(1)-clean-for-rebuild \
+	$(1)-clean-for-reconfigure \
+	$(1)-clean-for-reinstall \
+	$(1)-configure \
+	$(1)-depends \
+	$(1)-dirclean \
+	$(1)-external-deps \
+	$(1)-extract \
+	$(1)-graph-depends \
+	$(1)-install \
+	$(1)-install-host \
+	$(1)-install-images \
+	$(1)-install-staging \
+	$(1)-install-target \
+	$(1)-legal-info \
+	$(1)-patch \
+	$(1)-rebuild \
+	$(1)-reconfigure \
+	$(1)-reinstall \
+	$(1)-rsync \
+	$(1)-show-depends \
+	$(1)-show-version \
+	$(1)-source
 
 endif # $(2)_KCONFIG_VAR
 endef # inner-generic-package

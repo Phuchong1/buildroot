@@ -1,4 +1,4 @@
-# Hashes from: http://download.qt-project.org/official_releases/qt/5.3/5.3.2/submodules/qtenginio-opensource-src-5.3.2.tar.xz.mirrorlist
-sha256 d5b84656dc6a349db380e42690a18137e562dbaba1930216bb3e3815df6af708 qtenginio-opensource-src-5.3.2.tar.xz
-sha1   78e9c8ea929365449364a613b06ad066d243b80b                         qtenginio-opensource-src-5.3.2.tar.xz
-md5    53b67cf5470dfa9bcfc59aa5b8bfd66d                                 qtenginio-opensource-src-5.3.2.tar.xz
+# Hashes from: http://download.qt.io/official_releases/qt/5.4/5.4.1/submodules/qtenginio-opensource-src-5.4.1.tar.xz.mirrorlist
+sha256 aedb131c29180c7dbc41f888d6a078378a2dd3337766461734cc1b8f07e9577a qtenginio-opensource-src-5.4.1.tar.xz
+sha1   35da0343762a6aa7ded2c62aa4b36e77152a9240                         qtenginio-opensource-src-5.4.1.tar.xz
+md5    c80b967b159c513350fcfca223f435d4                                 qtenginio-opensource-src-5.4.1.tar.xz

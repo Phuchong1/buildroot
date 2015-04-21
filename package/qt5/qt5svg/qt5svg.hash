@@ -1,4 +1,4 @@
-# Hashes from: http://download.qt-project.org/official_releases/qt/5.3/5.3.2/submodules/qtsvg-opensource-src-5.3.2.tar.xz.mirrorlist
-sha256 1ec5c2f307ee55740cc8c82dc2ca4037dbc0ca398b4e32abbd967535e71ae30f qtsvg-opensource-src-5.3.2.tar.xz
-sha1   11740b39d22842214c7b4c555faee5a7da84575e                         qtsvg-opensource-src-5.3.2.tar.xz
-md5    f7972e80970ff26a908c43defb3d10e6                                 qtsvg-opensource-src-5.3.2.tar.xz
+# Hashes from: http://download.qt.io/official_releases/qt/5.4/5.4.1/submodules/qtsvg-opensource-src-5.4.1.tar.xz.mirrorlist
+sha256 be8a90ccce2e873d3489a416d1748089f46e329519acb990cf851d6c9f9de12c qtsvg-opensource-src-5.4.1.tar.xz
+sha1   f5bcaa91bd20ba7cdf27006a5553a6f182b62994                         qtsvg-opensource-src-5.4.1.tar.xz
+md5    b4a1e4f5dae26a7500f4f61a550f67eb                                 qtsvg-opensource-src-5.4.1.tar.xz

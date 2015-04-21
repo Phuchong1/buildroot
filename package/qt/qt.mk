@@ -38,18 +38,12 @@ QT_CFLAGS = $(TARGET_CFLAGS)
 QT_CXXFLAGS = $(TARGET_CXXFLAGS)
 QT_LDFLAGS = $(TARGET_LDFLAGS)
 
-ifeq ($(BR2_LARGEFILE),y)
-QT_CONFIGURE_OPTS += -largefile
-else
-QT_CONFIGURE_OPTS += -no-largefile
-
-# embedded sqlite module forces FILE_OFFSET_BITS=64 unless this is defined
-# webkit internally uses this module as well
-ifneq ($(BR2_PACKAGE_QT_SQLITE_QT)$(BR2_PACKAGE_QT_WEBKIT),)
-QT_CFLAGS += -DSQLITE_DISABLE_LFS
-QT_CXXFLAGS += -DSQLITE_DISABLE_LFS
-endif
-
+# Qt has some assembly function that are not present in thumb1 mode:
+# Error: selected processor does not support Thumb mode `swp r3,r7,[r4]'
+# so, we desactivate thumb mode
+ifeq ($(BR2_ARM_INSTRUCTIONS_THUMB),y)
+QT_CFLAGS += -marm
+QT_CXXFLAGS += -marm
 endif
 
 ifeq ($(BR2_PACKAGE_QT_QT3SUPPORT),y)
@@ -217,8 +211,6 @@ endif
 
 ifeq ($(BR2_arm)$(BR2_armeb),y)
 QT_EMB_PLATFORM = arm
-else ifeq ($(BR2_avr32),y)
-QT_EMB_PLATFORM = avr32
 else ifeq ($(BR2_i386),y)
 QT_EMB_PLATFORM = x86
 else ifeq ($(BR2_x86_64),y)
@@ -231,7 +223,20 @@ else
 QT_EMB_PLATFORM = generic
 endif
 
+ifeq ($(BR2_PACKAGE_QT_X11),y)
+QT_DEPENDENCIES += fontconfig xlib_libXi xlib_libX11 xlib_libXrender \
+                xlib_libXcursor xlib_libXrandr xlib_libXext xlib_libXv
+# Using pkg-config avoids us some logic to redefine and sed again mkspecs files
+# to add X11 include path and link options
+QT_CFLAGS += $(shell $(PKG_CONFIG_HOST_BINARY) --cflags x11)
+QT_CXXFLAGS += $(shell $(PKG_CONFIG_HOST_BINARY) --cflags x11)
+QT_LDFLAGS += $(shell $(PKG_CONFIG_HOST_BINARY) --libs x11 xext)
+QT_CONFIGURE_OPTS += -arch $(QT_EMB_PLATFORM) \
+		-xplatform qws/linux-$(QT_EMB_PLATFORM)-g++ -x11 -no-gtkstyle -no-sm \
+		-no-openvg
+else # if BR2_PACKAGE_QT_EMBEDDED
 QT_CONFIGURE_OPTS += -embedded $(QT_EMB_PLATFORM)
+endif
 
 ifneq ($(BR2_PACKAGE_QT_GUI_MODULE),y)
 QT_CONFIGURE_OPTS += -no-gui
@@ -340,10 +345,10 @@ QT_DEPENDENCIES += mysql
 endif
 ifeq ($(BR2_PACKAGE_QT_ODBC),y)
 QT_CONFIGURE_OPTS += -qt-sql-odbc
+QT_DEPENDENCIES += unixodbc
 endif
 ifeq ($(BR2_PACKAGE_QT_PSQL),y)
-QT_CONFIGURE_OPTS += -qt-sql-psql
-QT_CONFIGURE_ENV += PSQL_LIBS=-L$(STAGING_DIR)/usr/lib
+QT_CONFIGURE_OPTS += -qt-sql-psql -psql_config $(STAGING_DIR)/usr/bin/pg_config
 QT_DEPENDENCIES += postgresql
 endif
 ifeq ($(BR2_PACKAGE_QT_SQLITE_QT),y)
@@ -650,6 +655,7 @@ define QT_INSTALL_TARGET_IMPORTS
 endef
 
 # Fonts installation
+ifeq ($(BR2_PACKAGE_QT_EMBEDDED),y)
 ifneq ($(QT_FONTS),)
 define QT_INSTALL_TARGET_FONTS
 	mkdir -p $(TARGET_DIR)/usr/lib/fonts
@@ -663,6 +669,7 @@ define QT_INSTALL_TARGET_FONTS_TTF
 	cp -dpf $(STAGING_DIR)/usr/lib/fonts/*.ttf $(TARGET_DIR)/usr/lib/fonts
 endef
 endif
+endif # BR2_PACKAGE_QT_EMBEDDED
 
 ifeq ($(BR2_PACKAGE_QT_GFX_POWERVR),y)
 define QT_INSTALL_TARGET_POWERVR

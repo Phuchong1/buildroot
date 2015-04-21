@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-NGINX_VERSION = 1.6.2
+NGINX_VERSION = 1.6.3
 NGINX_SITE = http://nginx.org/download
 NGINX_LICENSE = BSD-2c
 NGINX_LICENSE_FILES = LICENSE
@@ -37,7 +37,7 @@ NGINX_CONF_ENV += \
 	ngx_force_have_libatomic=no \
 	ngx_force_have_epoll=yes \
 	ngx_force_have_sendfile=yes \
-	ngx_force_have_sendfile64=$(if $(BR2_LARGEFILE),yes,no) \
+	ngx_force_have_sendfile64=yes \
 	ngx_force_have_pr_set_dumpable=yes \
 	ngx_force_have_timer_event=yes \
 	ngx_force_have_map_anon=yes \

@@ -4,8 +4,9 @@
 #
 ################################################################################
 
-MESA3D_VERSION = 10.4.0
-MESA3D_SOURCE = MesaLib-$(MESA3D_VERSION).tar.bz2
+# When updating the version, please also update mesa3d-headers
+MESA3D_VERSION = 10.5.3
+MESA3D_SOURCE = mesa-$(MESA3D_VERSION).tar.xz
 MESA3D_SITE = ftp://ftp.freedesktop.org/pub/mesa/$(MESA3D_VERSION)
 MESA3D_LICENSE = MIT, SGI, Khronos
 MESA3D_LICENSE_FILES = docs/license.html
@@ -17,11 +18,6 @@ MESA3D_PROVIDES =
 
 MESA3D_DEPENDENCIES = \
 	expat \
-	host-bison \
-	host-flex \
-	host-gettext \
-	host-python \
-	host-xutil_makedepend \
 	libdrm
 
 ifeq ($(BR2_PACKAGE_XORG7),y)
@@ -34,9 +30,9 @@ MESA3D_DEPENDENCIES += \
 	xlib_libXdamage \
 	xlib_libXfixes \
 	libxcb
-MESA3D_CONF_OPTS += --enable-glx
+MESA3D_CONF_OPTS += --enable-glx --disable-mangling
 # quote from mesa3d configure "Building xa requires at least one non swrast gallium driver."
-ifneq ($(BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_NOUVEAU)$(BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_SVGA),)
+ifeq ($(BR2_PACKAGE_MESA3D_NEEDS_XA),y)
 MESA3D_CONF_OPTS += --enable-xa
 else
 MESA3D_CONF_OPTS += --disable-xa
@@ -56,6 +52,7 @@ endif
 
 #Gallium Drivers
 MESA3D_GALLIUM_DRIVERS-$(BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_NOUVEAU)  += nouveau
+MESA3D_GALLIUM_DRIVERS-$(BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_R600)     += r600
 MESA3D_GALLIUM_DRIVERS-$(BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_SVGA)     += svga
 MESA3D_GALLIUM_DRIVERS-$(BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_SWRAST)   += swrast
 # DRI Drivers
@@ -90,6 +87,7 @@ MESA3D_PROVIDES += libgl
 MESA3D_CONF_OPTS += \
 	--enable-dri \
 	--enable-shared-glapi \
+	--enable-driglx-direct \
 	--with-dri-drivers=$(subst $(space),$(comma),$(MESA3D_DRI_DRIVERS-y))
 endif
 
@@ -127,5 +125,8 @@ MESA3D_CONF_OPTS += --enable-gles1 --enable-gles2
 else
 MESA3D_CONF_OPTS += --disable-gles1 --disable-gles2
 endif
+
+# Avoid automatic search of llvm-config
+MESA3D_CONF_OPTS += --with-llvm-prefix=$(STAGING_DIR)/usr/bin
 
 $(eval $(autotools-package))
