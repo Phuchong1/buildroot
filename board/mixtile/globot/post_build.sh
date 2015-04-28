@@ -1,7 +1,5 @@
 #!/bin/sh
 
-cp output/host/opt/ext-toolchain/arm-none-linux-gnueabi/libc/lib/* output/target/lib/ -pfr
-
 chmod +x output/target/lib/*
 rm -rf output/target/init
 
