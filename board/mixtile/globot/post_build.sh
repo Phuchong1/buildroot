@@ -5,6 +5,8 @@ rm -rf output/target/init
 
 (cd output/target && ln -s bin/busybox init)
 
+cp -r board/mixtile/globot/system output/target
+
 cat > output/target/etc/init.d/rcS << EOF
 #!/bin/sh
 
