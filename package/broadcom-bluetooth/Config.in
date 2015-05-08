@@ -1,0 +1,8 @@
+config BR2_PACKAGE_BROADCOM_BLUETOOTH
+	bool "broadcom-bluetooth"
+	help
+	  broadcom-bluetooth is a small utility for downloading a patchram file
+	  in HCD format to Broadcom Bluetooth based silicon and combo chips and
+	  other utility functions
+	
+	  https://github.com/pengphei/broadcom-bluetooth
