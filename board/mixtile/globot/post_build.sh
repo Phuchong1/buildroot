@@ -27,8 +27,16 @@ MODULES_DIR=/lib/modules/\`uname -r\`
 # mount udisk partition
 #####################################
 
+if
+fsck.fat -y /dev/mmcblk0p1 
+then
+    echo "udisk is completed!"
+else
+    mkfs.fat /dev/mmcblk0p1
+fi
+
 mkdir -p /mnt/udisk
-mount -t extfat /dev/mmcblk0p1 /mnt/udisk
+mount /dev/mmcblk0p1 /mnt/udisk
 
 #####################################
 # load default modules
