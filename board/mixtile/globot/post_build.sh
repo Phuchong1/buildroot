@@ -22,6 +22,13 @@ mount /dev/nanda /boot
 MODULES_DIR=/lib/modules/\`uname -r\`
 
 #####################################
+# mount udisk partition
+#####################################
+
+mkdir -p /mnt/udisk
+mount /dev/mmcblk0p1 /mnt/udisk
+
+#####################################
 # load default modules
 #####################################
 
@@ -41,7 +48,7 @@ modprobe ad5820_act
 modprobe cci
 modprobe vfe_os
 modprobe vfe_subdev
-modprobe tvp5150
+modprobe xc6131_mipi 
 modprobe vfe_v4l2
 
 #####################################
