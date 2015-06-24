@@ -15,6 +15,8 @@ mount -t devtmpfs none /dev
 mkdir /dev/pts
 mount -t devpts none /dev/pts
 mount -t sysfs sysfs /sys
+mkdir /dev/shm
+mount -t tmpfs tmpfs /dev/shm
 mknod /dev/mali c 230 0
 hostname Globot
 mkdir -p /boot
@@ -26,7 +28,7 @@ MODULES_DIR=/lib/modules/\`uname -r\`
 #####################################
 
 mkdir -p /mnt/udisk
-mount /dev/mmcblk0p1 /mnt/udisk
+mount -t extfat /dev/mmcblk0p1 /mnt/udisk
 
 #####################################
 # load default modules
