@@ -15,11 +15,28 @@ mount -t devtmpfs none /dev
 mkdir /dev/pts
 mount -t devpts none /dev/pts
 mount -t sysfs sysfs /sys
+mkdir /dev/shm
+mount -t tmpfs tmpfs /dev/shm
 mknod /dev/mali c 230 0
 hostname Globot
 mkdir -p /boot
 mount /dev/nanda /boot
 MODULES_DIR=/lib/modules/\`uname -r\`
+
+#####################################
+# mount udisk partition
+#####################################
+
+if
+fsck.fat -y /dev/mmcblk0p1 
+then
+    echo "udisk is completed!"
+else
+    mkfs.fat /dev/mmcblk0p1
+fi
+
+mkdir -p /mnt/udisk
+mount /dev/mmcblk0p1 /mnt/udisk
 
 #####################################
 # load default modules
@@ -41,7 +58,7 @@ modprobe ad5820_act
 modprobe cci
 modprobe vfe_os
 modprobe vfe_subdev
-modprobe tvp5150
+modprobe xc6131_mipi 
 modprobe vfe_v4l2
 
 #####################################
@@ -61,6 +78,14 @@ wpa_supplicant -B -Dnl80211 -iwlan0 -c/etc/wpa_supplicant.conf
 sleep .5s
 echo "WiFi should be started"
 dhcpcd wlan0
+
+#####################################
+# bluetooth auto start
+#####################################
+echo "Starting bluetooth"
+echo -n "" > /dev/ttyS1
+brcm_patchram_plus -d --enable_hci --bd_addr 11:22:33:44:55:66 --no2bytes --tosleep 1000 --patchram /system/vendor/modules/bcm20710a1.hcd /dev/ttyS1
+hciattach /dev/ttyS1 any
 
 # Start all init scripts in /etc/init.d
 # executing them in numerical order.
@@ -125,6 +150,14 @@ wpa_supplicant -B -Dnl80211 -iwlan0 -c/etc/wpa_supplicant.conf
 sleep .5s
 echo "WiFi should be started"
 dhcpcd wlan0
+
+#####################################
+# bluetooth auto start
+#####################################
+echo "Starting bluetooth"
+echo -n "" > /dev/ttyS1
+brcm_patchram_plus -d --enable_hci --bd_addr 11:22:33:44:55:66 --no2bytes --tosleep 1000 --patchram /system/vendor/modules/bcm20710a1.hcd /dev/ttyS1
+hciattach /dev/ttyS1 any
 EOF
 
 cat > output/target/etc/network/interfaces << EOF
