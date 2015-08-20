@@ -46,6 +46,7 @@ mount /dev/mmcblk0p1 /mnt/udisk
 modprobe leds_sunxi
 modprobe bcmdhd
 modprobe gpio_trackball
+
 modprobe sw-device
 
 # csi modules
@@ -53,6 +54,7 @@ modprobe videobuf-core
 modprobe videobuf-dma-contig
 modprobe cam_detect
 modprobe actuator
+modprobe ad5820_act
 modprobe cci
 modprobe vfe_os
 modprobe vfe_subdev
@@ -81,9 +83,9 @@ dhcpcd wlan0
 # bluetooth auto start
 #####################################
 echo "Starting bluetooth"
-#echo -n "" > /dev/ttyS1
-#brcm_patchram_plus -d --enable_hci --bd_addr 11:22:33:44:55:66 --no2bytes --tosleep 1000 --patchram /system/vendor/modules/bcm20710a1.hcd /dev/ttyS1
-#hciattach /dev/ttyS1 any
+echo -n "" > /dev/ttyS1
+brcm_patchram_plus -d --enable_hci --bd_addr 11:22:33:44:55:66 --no2bytes --tosleep 1000 --patchram /system/vendor/modules/bcm20710a1.hcd /dev/ttyS1
+hciattach /dev/ttyS1 any
 
 # Start all init scripts in /etc/init.d
 # executing them in numerical order.
@@ -153,9 +155,9 @@ dhcpcd wlan0
 # bluetooth auto start
 #####################################
 echo "Starting bluetooth"
-#echo -n "" > /dev/ttyS1
-#brcm_patchram_plus -d --enable_hci --bd_addr 11:22:33:44:55:66 --no2bytes --tosleep 1000 --patchram /system/vendor/modules/bcm20710a1.hcd /dev/ttyS1
-#hciattach /dev/ttyS1 any
+echo -n "" > /dev/ttyS1
+brcm_patchram_plus -d --enable_hci --bd_addr 11:22:33:44:55:66 --no2bytes --tosleep 1000 --patchram /system/vendor/modules/bcm20710a1.hcd /dev/ttyS1
+hciattach /dev/ttyS1 any
 
 EOF
 
