@@ -5,8 +5,8 @@ rm -rf output/target/init
 
 (cd output/target && ln -s bin/busybox init)
 
-cp -r board/mixtile/globot/system output/target/
-cp -r board/mixtile/globot/modules output/target/lib
+cp -r board/mixtile/globot-a33/system output/target/
+cp -r board/mixtile/globot-a33/modules output/target/lib
 
 cat > output/target/etc/init.d/rcS << EOF
 #!/bin/sh
@@ -82,10 +82,10 @@ dhcpcd wlan0
 #####################################
 # bluetooth auto start
 #####################################
-echo "Starting bluetooth"
-echo -n "" > /dev/ttyS1
-brcm_patchram_plus -d --enable_hci --bd_addr 11:22:33:44:55:66 --no2bytes --tosleep 1000 --patchram /system/vendor/modules/bcm20710a1.hcd /dev/ttyS1
-hciattach /dev/ttyS1 any
+#echo "Starting bluetooth"
+#echo -n "" > /dev/ttyS1
+#brcm_patchram_plus -d --enable_hci --bd_addr 11:22:33:44:55:66 --no2bytes --tosleep 1000 --patchram /system/vendor/modules/bcm20710a1.hcd /dev/ttyS1
+#hciattach /dev/ttyS1 any
 
 # Start all init scripts in /etc/init.d
 # executing them in numerical order.

@@ -1,0 +1,11 @@
+config BR2_TARGET_ROOTFS_EXT4A
+	bool "android ext4 root filesystem"
+	help
+	  Build an android ext4 root filesystem
+
+config BR2_TARGET_ROOTFS_EXT4A_SIZE
+	int "size in Mega bytes (leave at 0 for auto calculation)"
+	depends on BR2_TARGET_ROOTFS_EXT4A
+	default 0
+
+
