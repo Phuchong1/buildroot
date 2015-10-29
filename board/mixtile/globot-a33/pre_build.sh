@@ -2,6 +2,7 @@
 
 chmod +x output/target/lib/*
 rm -rf output/target/init
+rm -rf output/target/lib/modules
 
 (cd output/target && ln -s bin/busybox init)
 
