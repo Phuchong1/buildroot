@@ -49,12 +49,13 @@ modprobe bcmdhd
 #####################################
 # loop network
 #####################################
-#MAC_ADDR="\`uuidgen |awk -F- '{print \$5}'|sed 's/../&:/g'|sed 's/\(.\)$//' |cut -b3-17\`"
-
-#ifconfig eth0 hw ether "48\$MAC_ADDR"
 ifconfig lo 127.0.0.1
-#udhcpc eth0
 
+#####################################
+# ethernet
+#####################################
+ifconfig eth0 up
+udhcpc eth0 &
 udevd &
 #####################################
 # wifi auto start
@@ -63,7 +64,7 @@ echo "Starting WiFi..."
 wpa_supplicant -B -Dnl80211 -iwlan0 -c/etc/wpa_supplicant.conf 
 sleep .5s
 echo "WiFi should be started"
-dhcpcd wlan0
+dhcpcd wlan0 &
 
 #####################################
 # bluetooth auto start
