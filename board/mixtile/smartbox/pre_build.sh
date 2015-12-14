@@ -3,6 +3,7 @@
 chmod +x output/target/lib/*
 rm -rf output/target/init
 rm -rf output/target/lib/modules
+rm -rf output/target/system
 
 (cd output/target && ln -s bin/busybox init)
 
@@ -55,8 +56,8 @@ ifconfig lo 127.0.0.1
 # ethernet
 #####################################
 ifconfig eth0 up
-udhcpc eth0 &
-udevd &
+dhcpcd eth0 &
+
 #####################################
 # wifi auto start
 #####################################
@@ -65,6 +66,8 @@ wpa_supplicant -B -Dnl80211 -iwlan0 -c/etc/wpa_supplicant.conf
 sleep .5s
 echo "WiFi should be started"
 dhcpcd wlan0 &
+
+udevd &
 
 #####################################
 # bluetooth auto start
